@@ -232,7 +232,7 @@
   }
   @media (hover: none) { .hint { display: none; } }
 
-  .toast {
+  /* .toast {
     position: fixed;
     left: 50%;
     bottom: calc(22px + env(safe-area-inset-bottom, 0px));
@@ -252,7 +252,7 @@
   .toast button {
     min-height: 36px; padding: 0 14px; border: 0; border-radius: 10px;
     background: linear-gradient(135deg, var(--grad-a), var(--grad-b)); color: var(--on-accent); font-weight: 650; cursor: pointer;
-  }
+  } */
 
   @media (max-width: 520px) {
     body {
@@ -374,10 +374,11 @@
   </section>
 </main>
 
+<!-- Toast notification disabled.
 <div class="toast" id="toast" role="status">
   <span id="toast-msg"></span>
   <button type="button" id="toast-act">Undo</button>
-</div>
+</div> -->
 
 <script>
 (function () {
@@ -387,7 +388,7 @@
   var els = {
     count: $("count"), sub: $("sub"), bar: $("bar"), dial: $("dial"), tap: $("tap"),
     undo: $("undo"), reset: $("reset"), chips: $("chips"), theme: $("theme"),
-    toast: $("toast"), toastMsg: $("toast-msg"), toastAct: $("toast-act")
+    // toast: $("toast"), toastMsg: $("toast-msg"), toastAct: $("toast-act")
   };
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -478,12 +479,12 @@
       armTimer = setTimeout(disarm, 2600);
       return;
     }
-    var prev = state.count;
     disarm();
     state.count = 0; render(); bump(); buzz(20);
-    showToast("Counter reset", "Undo", function () { state.count = prev; render(); bump(); });
+    // showToast("Counter reset", "Undo", function () { state.count = prev; render(); bump(); });
   }
 
+  /*
   var toastTimer, toastCb = null;
   function showToast(msg, label, cb) {
     els.toastMsg.textContent = msg; els.toastAct.textContent = label; toastCb = cb;
@@ -493,6 +494,7 @@
   }
   function hideToast() { els.toast.classList.remove("show"); toastCb = null; }
   els.toastAct.addEventListener("click", function () { if (toastCb) toastCb(); hideToast(); });
+  */
 
   /* ---------- input ---------- */
   els.tap.addEventListener("pointerdown", function (e) {
