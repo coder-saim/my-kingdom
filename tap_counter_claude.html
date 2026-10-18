@@ -489,7 +489,7 @@
     els.toastMsg.textContent = msg; els.toastAct.textContent = label; toastCb = cb;
     els.toast.classList.add("show");
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(hideToast, 5000);
+    toastTimer = setTimeout(hideToast, 1000);
   }
   function hideToast() { els.toast.classList.remove("show"); toastCb = null; }
   els.toastAct.addEventListener("click", function () { if (toastCb) toastCb(); hideToast(); });
