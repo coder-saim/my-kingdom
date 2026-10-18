@@ -254,6 +254,65 @@
     background: linear-gradient(135deg, var(--grad-a), var(--grad-b)); color: var(--on-accent); font-weight: 650; cursor: pointer;
   }
 
+  @media (max-width: 520px) {
+    body {
+      min-height: 100svh;
+    }
+
+    .app {
+      min-height: 100svh;
+      height: auto;
+      justify-content: flex-start;
+      padding: calc(14px + env(safe-area-inset-top, 0px)) 16px calc(18px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .readout {
+      margin-top: clamp(4px, 3vh, 4px);
+    }
+
+    .dial {
+      --size: min(78vw, 39svh, 280px);
+      margin: clamp(16px, 4vh, 22px) 0;
+    }
+
+    .controls {
+      margin-top: auto;
+    }
+
+    .goal {
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .chips {
+      width: 100%;
+    }
+
+    .chip {
+      flex: 1;
+      min-width: 0;
+      padding-inline: 8px;
+    }
+
+    .toast {
+      width: min(calc(100% - 24px), 360px);
+    }
+  }
+
+  @media (max-width: 360px) {
+    .app {
+      padding-inline: 12px;
+    }
+
+    .actions {
+      gap: 8px;
+    }
+
+    .btn {
+      min-height: 48px;
+    }
+  }
+
   @media (max-height: 640px) {
     .count { font-size: clamp(3.5rem, 18vw, 5rem); }
     .dial { margin: 12px 0; --size: min(64vw, 40dvh, 260px); }

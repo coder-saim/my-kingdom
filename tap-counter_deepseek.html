@@ -401,6 +401,52 @@
     transition: color .45s ease;
   }
 
+  @media (max-width: 520px) {
+    body {
+      padding: 14px;
+    }
+
+    .app {
+      min-height: calc(100svh - 28px);
+      gap: 14px;
+    }
+
+    .tap-wrap {
+      width: min(78vw, 42svh, 280px);
+    }
+
+    .controls {
+      gap: 8px;
+    }
+
+    .btn {
+      padding-inline: 10px;
+    }
+  }
+
+  @media (max-width: 360px) {
+    body {
+      padding: 10px;
+    }
+
+    .app {
+      min-height: calc(100svh - 20px);
+    }
+
+    .title {
+      font-size: 1rem;
+    }
+
+    .controls {
+      gap: 7px;
+    }
+
+    .btn {
+      padding-inline: 8px;
+      font-size: .88rem;
+    }
+  }
+
   /* ------------------------------------------------------------
      Reduced motion
      ------------------------------------------------------------ */

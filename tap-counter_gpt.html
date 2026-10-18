@@ -177,6 +177,16 @@
       .stats-panel,.goal-panel { padding:21px; }
       .footer { padding-top:20px; flex-wrap:wrap; }
     }
+    @media (max-width:520px) {
+      .app-shell { width: min(100% - 20px, 540px); padding-bottom: 22px; }
+      .topbar { padding-inline: 9px; }
+      .heading-row { padding-inline: 0; }
+      .counter-panel { padding-inline: 16px; }
+      .control-row { width: 100%; }
+      .tap-button { width: min(100%, 280px); }
+      .footer { gap: 10px; }
+      .keyboard-note { width: 100%; justify-content: center; }
+    }
     @media (max-width:380px) {
       .app-shell { width:calc(100% - 22px); }
       .brand-tagline { display:none; }

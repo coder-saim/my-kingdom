@@ -168,6 +168,50 @@
       color: var(--muted);
       font-size: 0.8rem;
     }
+
+    @media (max-width: 520px) {
+      body {
+        padding: 14px;
+      }
+
+      main {
+        padding: 52px 18px 24px;
+        border-radius: 22px;
+      }
+
+      .theme-toggle {
+        top: 14px;
+        right: 14px;
+      }
+
+      .intro {
+        margin-bottom: 26px;
+      }
+
+      .counter-button {
+        min-height: 60px;
+        padding-inline: 16px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      body {
+        padding: 10px;
+      }
+
+      main {
+        padding-inline: 14px;
+      }
+
+      h1 {
+        font-size: 1.9rem;
+      }
+
+      .counter-button {
+        gap: 10px;
+        font-size: 0.95rem;
+      }
+    }
   </style>
 </head>
 <body>
