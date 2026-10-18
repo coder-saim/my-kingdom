@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Choose a tap counter experience.">
+  <title>Tap Counter Collection</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --background: #0e1020;
+      --surface: rgba(27, 30, 55, 0.8);
+      --surface-border: rgba(255, 255, 255, 0.12);
+      --text: #f7f7ff;
+      --muted: #a8aac5;
+      --accent: #8f7cff;
+      --accent-dark: #6555e8;
+      --shadow: rgba(0, 0, 0, 0.32);
+    }
+
+    :root[data-theme="light"] {
+      color-scheme: light;
+      --background: #eef1ff;
+      --surface: rgba(255, 255, 255, 0.82);
+      --surface-border: rgba(45, 49, 90, 0.12);
+      --text: #1c1d35;
+      --muted: #62657e;
+      --accent: #6555e8;
+      --accent-dark: #5142c8;
+      --shadow: rgba(57, 61, 110, 0.18);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      overflow-x: hidden;
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(122, 95, 255, 0.22), transparent 32%),
+        radial-gradient(circle at 85% 80%, rgba(0, 201, 167, 0.14), transparent 28%),
+        var(--background);
+    }
+
+    main {
+      position: relative;
+      width: min(100%, 700px);
+      padding: clamp(28px, 7vw, 64px);
+      text-align: center;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 28px;
+      box-shadow: 0 24px 70px var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .theme-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      color: var(--text);
+      font-size: 1.2rem;
+      cursor: pointer;
+      background: transparent;
+      border: 1px solid var(--surface-border);
+      border-radius: 12px;
+      transition: transform 160ms ease, background 160ms ease;
+    }
+
+    .theme-toggle:hover {
+      transform: translateY(-2px);
+      background: rgba(143, 124, 255, 0.14);
+    }
+
+    .theme-toggle:focus-visible {
+      outline: 3px solid #c7c0ff;
+      outline-offset: 3px;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 7vw, 3.5rem);
+      line-height: 1.05;
+      letter-spacing: -0.05em;
+    }
+
+    .intro {
+      max-width: 480px;
+      margin: 18px auto 34px;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    .counter-options {
+      display: grid;
+      gap: 14px;
+      margin: 0;
+    }
+
+    .counter-button {
+      width: 100%;
+      min-height: 64px;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      color: var(--text);
+      font: inherit;
+      font-size: 1rem;
+      font-weight: 750;
+      text-align: left;
+      cursor: pointer;
+      background: linear-gradient(135deg, rgba(143, 124, 255, 0.2), rgba(101, 85, 232, 0.08));
+      border: 1px solid rgba(143, 124, 255, 0.35);
+      border-radius: 16px;
+      transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+    }
+
+    .counter-button:hover {
+      transform: translateY(-2px);
+      background: linear-gradient(135deg, rgba(143, 124, 255, 0.35), rgba(101, 85, 232, 0.16));
+      border-color: var(--accent);
+    }
+
+    .counter-button:active {
+      transform: translateY(0);
+    }
+
+    .counter-button:focus-visible {
+      outline: 3px solid #c7c0ff;
+      outline-offset: 4px;
+    }
+
+    .arrow {
+      color: #c7c0ff;
+      font-size: 1.35rem;
+      transition: transform 160ms ease;
+    }
+
+    .counter-button:hover .arrow {
+      transform: translateX(4px);
+    }
+
+    footer {
+      margin-top: 28px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light mode" title="Switch to light mode">
+      <span aria-hidden="true">☼</span>
+    </button>
+    <p class="eyebrow">Tap Counter Collection</p>
+    <h1>Choose your counter</h1>
+    <p class="intro">Pick an experience below and start counting your taps.</p>
+
+    <nav class="counter-options" aria-label="Tap counter options">
+        <button class="counter-button" type="button" data-page="tap_counter_claude.html">
+            <span>Classic Tap Counter</span>
+            <span class="arrow" aria-hidden="true">→</span>
+        </button>
+        <button class="counter-button" type="button" data-page="tap-counter_gpt.html">
+          <span>Taply Counter</span>
+          <span class="arrow" aria-hidden="true">→</span>
+        </button>
+      <button class="counter-button" type="button" data-page="tap-counter_deepseek.html">
+        <span>Minimal Tap Counter</span>
+        <span class="arrow" aria-hidden="true">→</span>
+      </button>
+    </nav>
+
+    <footer>Three ways to keep your count moving.</footer>
+  </main>
+
+  <script>
+    var themeToggle = document.getElementById("themeToggle");
+    var savedTheme = localStorage.getItem("tap-counter-theme");
+    var prefersLight = window.matchMedia("(prefers-color-scheme: light)").matches;
+
+    function setTheme(theme) {
+      var isLight = theme === "light";
+      document.documentElement.dataset.theme = isLight ? "light" : "dark";
+      themeToggle.setAttribute("aria-label", isLight ? "Switch to dark mode" : "Switch to light mode");
+      themeToggle.setAttribute("title", isLight ? "Switch to dark mode" : "Switch to light mode");
+      themeToggle.querySelector("span").textContent = isLight ? "☾" : "☼";
+    }
+
+    setTheme(savedTheme || (prefersLight ? "light" : "dark"));
+
+    themeToggle.addEventListener("click", function () {
+      var nextTheme = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+      localStorage.setItem("tap-counter-theme", nextTheme);
+      setTheme(nextTheme);
+    });
+
+    document.querySelectorAll("[data-page]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        window.location.href = button.dataset.page;
+      });
+    });
+  </script>
+</body>
+</html>

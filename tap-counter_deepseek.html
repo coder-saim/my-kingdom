@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#eef1f8" />
+<meta name="description" content="A clean, minimal tap counter with dark and light mode." />
+<title>Tap Counter</title>
+
+<!-- Set the theme BEFORE first paint to avoid a flash -->
+<script>
+  (function () {
+    try {
+      var saved = localStorage.getItem('tapcounter:theme');
+      var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', saved || (dark ? 'dark' : 'light'));
+    } catch (e) {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  })();
+</script>
+
+<style>
+  /* ------------------------------------------------------------
+     Registered custom property so the progress ring animates
+     ------------------------------------------------------------ */
+  @property --p {
+    syntax: '<number>';
+    inherits: false;
+    initial-value: 0;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  /* ------------------------------------------------------------
+     Theme tokens
+     ------------------------------------------------------------ */
+  :root {
+    color-scheme: light;
+    --bg: #eef1f8;
+    --surface: #ffffff;
+    --surface-hover: #f4f7fd;
+    --text: #0f172a;
+    --muted: #64748b;
+    --border: rgba(15, 23, 42, 0.08);
+    --accent-1: #6366f1;
+    --accent-2: #a855f7;
+    --ring-track: rgba(15, 23, 42, 0.09);
+    --glow-1: rgba(99, 102, 241, 0.30);
+    --glow-2: rgba(236, 72, 153, 0.22);
+    --btn-shadow: rgba(99, 102, 241, 0.45);
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, .05), 0 6px 18px -8px rgba(15, 23, 42, .16);
+    --blob-opacity: .75;
+  }
+
+  [data-theme='dark'] {
+    color-scheme: dark;
+    --bg: #080b12;
+    --surface: #131a29;
+    --surface-hover: #1a2336;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --border: rgba(255, 255, 255, 0.08);
+    --ring-track: rgba(255, 255, 255, 0.10);
+    --accent-1: #6366f1;
+    --accent-2: #a855f7;
+    --glow-1: rgba(99, 102, 241, 0.34);
+    --glow-2: rgba(236, 72, 153, 0.24);
+    --btn-shadow: rgba(99, 102, 241, 0.42);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 28px -14px rgba(0, 0, 0, .9);
+    --blob-opacity: .85;
+  }
+
+  /* ------------------------------------------------------------
+     Base
+     ------------------------------------------------------------ */
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+                 Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    transition: background-color .45s ease, color .45s ease;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+  }
+
+  /* ------------------------------------------------------------
+     Ambient background blobs
+     ------------------------------------------------------------ */
+  .backdrop {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: var(--blob-opacity);
+    transition: background-color .6s ease, opacity .6s ease;
+  }
+  .blob-1 {
+    width: 62vmax; height: 62vmax;
+    left: -24vmax; top: -28vmax;
+    background-color: var(--glow-1);
+  }
+  .blob-2 {
+    width: 56vmax; height: 56vmax;
+    right: -22vmax; bottom: -26vmax;
+    background-color: var(--glow-2);
+  }
+
+  /* ------------------------------------------------------------
+     Layout
+     ------------------------------------------------------------ */
+  .app {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+    min-height: min(calc(100svh - 40px), 740px);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+  }
+
+  /* ------------------------------------------------------------
+     Top bar
+     ------------------------------------------------------------ */
+  .topbar {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    transition: color .45s ease;
+  }
+  .title .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    box-shadow: 0 0 14px var(--accent-1);
+    flex: none;
+  }
+
+  .icon-btn {
+    position: relative;
+    width: 44px; height: 44px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: background-color .3s ease, border-color .3s ease,
+                transform .15s ease, color .3s ease, box-shadow .3s ease;
+  }
+  .icon-btn:hover { background: var(--surface-hover); }
+  .icon-btn:active { transform: scale(.94); }
+  .icon-btn:focus-visible { outline: 2px solid var(--accent-1); outline-offset: 3px; }
+
+  .icon-btn .icon {
+    position: absolute;
+    width: 20px; height: 20px;
+    transition: transform .5s cubic-bezier(.34, 1.56, .64, 1), opacity .3s ease;
+  }
+  /* Light mode → show moon (action: go dark) */
+  .icon-btn .sun  { opacity: 0; transform: rotate(-90deg) scale(.4); }
+  .icon-btn .moon { opacity: 1; transform: rotate(0deg) scale(1); }
+  /* Dark mode → show sun (action: go light) */
+  [data-theme='dark'] .icon-btn .sun  { opacity: 1; transform: rotate(0deg) scale(1); }
+  [data-theme='dark'] .icon-btn .moon { opacity: 0; transform: rotate(90deg) scale(.4); }
+
+  /* ------------------------------------------------------------
+     Stage / tap button
+     ------------------------------------------------------------ */
+  .stage {
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 0;
+    display: grid;
+    place-items: center;
+  }
+
+  .tap-wrap {
+    position: relative;
+    width: min(72vw, 44vh, 300px);
+    aspect-ratio: 1 / 1;
+    display: grid;
+    place-items: center;
+  }
+
+  /* soft glow behind the button */
+  .tap-wrap::before {
+    content: '';
+    position: absolute;
+    inset: 14%;
+    border-radius: 50%;
+    background: linear-gradient(140deg, var(--accent-1), var(--accent-2));
+    filter: blur(42px);
+    opacity: .5;
+    transition: opacity .4s ease;
+    pointer-events: none;
+  }
+
+  /* progress ring */
+  .ring {
+    position: absolute;
+    inset: -13px;
+    border-radius: 50%;
+    --p: 0;
+    background: conic-gradient(
+      from -90deg,
+      var(--accent-1) 0%,
+      var(--accent-2) calc(var(--p) * 1%),
+      var(--ring-track) calc(var(--p) * 1%)
+    );
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4.5px));
+            mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4.5px));
+    transition: --p .45s cubic-bezier(.34, 1.2, .64, 1);
+    opacity: .95;
+    pointer-events: none;
+  }
+
+  .tap-button {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    color: #fff;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    isolation: isolate;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+    background:
+      radial-gradient(120% 120% at 30% 18%, rgba(255, 255, 255, .38), transparent 55%),
+      linear-gradient(150deg, var(--accent-1), var(--accent-2));
+    box-shadow:
+      0 30px 60px -22px var(--btn-shadow),
+      0 10px 26px -14px rgba(0, 0, 0, .45),
+      inset 0 1px 0 rgba(255, 255, 255, .35),
+      inset 0 -10px 26px rgba(0, 0, 0, .14);
+    transition: transform .16s cubic-bezier(.34, 1.56, .64, 1), box-shadow .3s ease;
+  }
+  .tap-button:active {
+    transform: scale(.955);
+    box-shadow:
+      0 16px 34px -20px var(--btn-shadow),
+      0 6px 16px -12px rgba(0, 0, 0, .4),
+      inset 0 1px 0 rgba(255, 255, 255, .3),
+      inset 0 -6px 20px rgba(0, 0, 0, .16);
+  }
+  .tap-button:focus-visible {
+    outline: 3px solid var(--text);
+    outline-offset: 8px;
+  }
+
+  .tap-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 14px;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .count {
+    font-size: clamp(2.6rem, 13vw, 3.6rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, .18);
+    will-change: transform;
+    transition: font-size .2s ease;
+  }
+
+  .hint {
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .3em;
+    text-indent: .3em;
+    text-transform: uppercase;
+    opacity: .78;
+  }
+
+  /* tap ripple */
+  .ripple {
+    position: absolute;
+    z-index: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .5);
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0);
+    animation: ripple .7s cubic-bezier(.2, .6, .3, 1) forwards;
+  }
+  @keyframes ripple {
+    0%   { transform: translate(-50%, -50%) scale(0);   opacity: .55; }
+    100% { transform: translate(-50%, -50%) scale(1);   opacity: 0; }
+  }
+
+  /* confetti particles */
+  .confetti {
+    position: fixed;
+    z-index: 9999;
+    border-radius: 50%;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    will-change: transform, opacity;
+  }
+
+  /* ------------------------------------------------------------
+     Footer / controls
+     ------------------------------------------------------------ */
+  .footer {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .controls {
+    width: 100%;
+    display: flex;
+    gap: 12px;
+  }
+
+  .btn {
+    flex: 1 1 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 16px;
+    font: inherit;
+    font-size: .95rem;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: background-color .25s ease, border-color .25s ease,
+                color .25s ease, transform .14s ease, opacity .2s ease;
+  }
+  .btn:hover:not(:disabled) { background: var(--surface-hover); }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .btn:disabled { opacity: .42; cursor: not-allowed; box-shadow: none; }
+  .btn:focus-visible { outline: 2px solid var(--accent-1); outline-offset: 2px; }
+
+  .btn-icon {
+    width: 17px; height: 17px;
+    opacity: .85;
+    flex: none;
+  }
+
+  .note {
+    margin: 0;
+    font-size: .78rem;
+    font-weight: 500;
+    color: var(--muted);
+    text-align: center;
+    transition: color .45s ease;
+  }
+
+  /* ------------------------------------------------------------
+     Reduced motion
+     ------------------------------------------------------------ */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .001ms !important;
+    }
+  }
+</style>
+</head>
+
+<body>
+  <div class="backdrop" aria-hidden="true">
+    <span class="blob blob-1"></span>
+    <span class="blob blob-2"></span>
+  </div>
+
+  <div class="app">
+    <header class="topbar">
+      <h1 class="title"><span class="dot" aria-hidden="true"></span>Tap Counter</h1>
+      <button class="icon-btn" id="themeToggle" type="button" aria-label="Switch to dark mode">
+        <svg class="icon sun" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4.2"/>
+          <path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/>
+        </svg>
+        <svg class="icon moon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20.5 13.2A8.5 8.5 0 0 1 10.8 3.5a8.5 8.5 0 1 0 9.7 9.7Z"/>
+        </svg>
+      </button>
+    </header>
+
+    <main class="stage">
+      <div class="tap-wrap">
+        <div class="ring" id="progressRing" aria-hidden="true"></div>
+        <button class="tap-button" id="tapButton" type="button" aria-label="Tap to increment the counter">
+          <span class="tap-content">
+            <span class="count" id="count">0</span>
+            <span class="hint">taps</span>
+          </span>
+        </button>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="controls">
+        <button class="btn" id="undoBtn" type="button" disabled>
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M8 6 4 10l4 4"/>
+            <path d="M4 10h9a5 5 0 0 1 0 10h-2"/>
+          </svg>
+          Undo
+        </button>
+        <button class="btn" id="resetBtn" type="button" disabled>
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3.5 12a8.5 8.5 0 1 0 2.8-6.3"/>
+            <path d="M3 4v4.5h4.5"/>
+          </svg>
+          Reset
+        </button>
+      </div>
+      <p class="note">Progress is saved on this device</p>
+    </footer>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* ------------------------------------------------------------
+       Elements & constants
+       ------------------------------------------------------------ */
+    var root         = document.documentElement;
+    var countEl      = document.getElementById('count');
+    var tapBtn       = document.getElementById('tapButton');
+    var ring         = document.getElementById('progressRing');
+    var themeToggle  = document.getElementById('themeToggle');
+    var undoBtn      = document.getElementById('undoBtn');
+    var resetBtn     = document.getElementById('resetBtn');
+    var themeMeta    = document.querySelector('meta[name="theme-color"]');
+
+    var THEME_KEY    = 'tapcounter:theme';
+    var STATE_KEY    = 'tapcounter:state';
+    var MAX_HISTORY  = 50;
+    var MILESTONE    = 100;
+
+    /* ------------------------------------------------------------
+       State
+       ------------------------------------------------------------ */
+    var count    = 0;
+    var history  = [];
+    var popAnim  = null;
+    var saveTimer = null;
+
+    /* ------------------------------------------------------------
+       Persistence
+       ------------------------------------------------------------ */
+    function readState() {
+      try {
+        var raw = localStorage.getItem(STATE_KEY);
+        if (!raw) return;
+        var data = JSON.parse(raw);
+        if (data && Number.isFinite(data.count) && data.count >= 0) {
+          count = Math.floor(data.count);
+        }
+        if (Array.isArray(data.history)) {
+          history = data.history
+            .filter(function (n) { return Number.isFinite(n) && n >= 0; })
+            .slice(-MAX_HISTORY);
+        }
+      } catch (e) { /* storage unavailable — ignore */ }
+    }
+
+    function writeState() {
+      try {
+        localStorage.setItem(STATE_KEY, JSON.stringify({
+          count: count,
+          history: history.slice(-MAX_HISTORY)
+        }));
+      } catch (e) { /* ignore */ }
+    }
+
+    function queueSave() {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(writeState, 250);
+    }
+
+    /* ------------------------------------------------------------
+       Rendering
+       ------------------------------------------------------------ */
+    function render(opts) {
+      var animate = !!(opts && opts.animate);
+
+      countEl.textContent = count.toLocaleString();
+
+      // shrink the number when it gets long so it always fits the circle
+      var digits = String(count).length;
+      countEl.style.fontSize =
+        digits > 6 ? '2rem' :
+        digits > 5 ? '2.3rem' :
+        digits > 4 ? '2.7rem' :
+        digits > 3 ? '3.1rem' : '';
+
+      // progress toward the next milestone of 10
+      ring.style.setProperty('--p', (count % 10) / 10 * 100);
+
+      undoBtn.disabled  = history.length === 0;
+      resetBtn.disabled = count === 0;
+
+      if (animate) popCount();
+      queueSave();
+    }
+
+    function popCount() {
+      if (typeof countEl.animate !== 'function') return;
+      if (popAnim) popAnim.cancel();
+      popAnim = countEl.animate(
+        [
+          { transform: 'scale(1)' },
+          { transform: 'scale(1.13)' },
+          { transform: 'scale(1)' }
+        ],
+        { duration: 280, easing: 'cubic-bezier(.34, 1.56, .64, 1)' }
+      );
+    }
+
+    /* ------------------------------------------------------------
+       Actions
+       ------------------------------------------------------------ */
+    function pushHistory(value) {
+      history.push(value);
+      if (history.length > MAX_HISTORY) history.shift();
+    }
+
+    function increment() {
+      pushHistory(count);
+      count += 1;
+      render({ animate: true });
+      vibrate(8);
+      if (count % MILESTONE === 0) celebrate();
+    }
+
+    function undo() {
+      if (!history.length) return;
+      count = history.pop();
+      render({ animate: true });
+      vibrate(5);
+    }
+
+    function reset() {
+      if (count === 0) return;
+      pushHistory(count);
+      count = 0;
+      render({ animate: true });
+      vibrate([6, 30, 6]);
+    }
+
+    /* ------------------------------------------------------------
+       Feedback: ripple, haptics, confetti
+       ------------------------------------------------------------ */
+    function spawnRipple(clientX, clientY) {
+      var rect = tapBtn.getBoundingClientRect();
+      var size = Math.max(rect.width, rect.height) * 2.2;
+
+      var x = (clientX === null || clientX === undefined) ? rect.width / 2 : clientX - rect.left;
+      var y = (clientY === null || clientY === undefined) ? rect.height / 2 : clientY - rect.top;
+
+      var el = document.createElement('span');
+      el.className = 'ripple';
+      el.style.width = size + 'px';
+      el.style.height = size + 'px';
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+      tapBtn.appendChild(el);
+
+      el.addEventListener('animationend', function () { el.remove(); });
+    }
+
+    function vibrate(pattern) {
+      if (navigator.vibrate) {
+        try { navigator.vibrate(pattern); } catch (e) { /* ignore */ }
+      }
+    }
+
+    function celebrate() {
+      vibrate([10, 40, 10]);
+
+      var rect = tapBtn.getBoundingClientRect();
+      var cx = rect.left + rect.width / 2;
+      var cy = rect.top + rect.height / 2;
+      var colors = ['#6366f1', '#a855f7', '#ec4899', '#22d3ee', '#f59e0b', '#34d399'];
+      var total = 28;
+
+      for (var i = 0; i < total; i++) {
+        (function (i) {
+          var p = document.createElement('span');
+          p.className = 'confetti';
+          p.style.left = cx + 'px';
+          p.style.top = cy + 'px';
+          p.style.background = colors[i % colors.length];
+
+          var size = 6 + Math.random() * 6;
+          p.style.width = size + 'px';
+          p.style.height = size + 'px';
+          document.body.appendChild(p);
+
+          var angle = (Math.PI * 2 * i) / total + Math.random() * 0.5;
+          var dist = 120 + Math.random() * 150;
+          var dx = Math.cos(angle) * dist;
+          var dy = Math.sin(angle) * dist;
+
+          var anim = p.animate([
+            { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+            { transform: 'translate(calc(-50% + ' + dx + 'px), calc(-50% + ' + dy + 'px)) scale(.3)', opacity: 0 }
+          ], {
+            duration: 800 + Math.random() * 500,
+            easing: 'cubic-bezier(.16, 1, .3, 1)'
+          });
+
+          anim.onfinish = function () { p.remove(); };
+        })(i);
+      }
+    }
+
+    /* ------------------------------------------------------------
+       Theme
+       ------------------------------------------------------------ */
+    function applyTheme(theme) {
+      root.setAttribute('data-theme', theme);
+      if (themeMeta) {
+        themeMeta.setAttribute('content', theme === 'dark' ? '#080b12' : '#eef1f8');
+      }
+      var label = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+      themeToggle.setAttribute('aria-label', label);
+      themeToggle.setAttribute('title', label);
+      themeToggle.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+    }
+
+    function initTheme() {
+      var saved = null;
+      try { saved = localStorage.getItem(THEME_KEY); } catch (e) { /* ignore */ }
+
+      var mq = window.matchMedia('(prefers-color-scheme: dark)');
+      applyTheme(saved || (mq.matches ? 'dark' : 'light'));
+
+      themeToggle.addEventListener('click', function () {
+        var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        applyTheme(next);
+        try { localStorage.setItem(THEME_KEY, next); } catch (e) { /* ignore */ }
+      });
+
+      // Follow the OS only when the user hasn't chosen manually
+      var onSystemChange = function (e) {
+        var stored = null;
+        try { stored = localStorage.getItem(THEME_KEY); } catch (err) { /* ignore */ }
+        if (!stored) applyTheme(e.matches ? 'dark' : 'light');
+      };
+      if (mq.addEventListener) mq.addEventListener('change', onSystemChange);
+      else if (mq.addListener) mq.addListener(onSystemChange);
+    }
+
+    /* ------------------------------------------------------------
+       Events
+       ------------------------------------------------------------ */
+    tapBtn.addEventListener('pointerdown', function (e) {
+      spawnRipple(e.clientX, e.clientY);
+    });
+
+    tapBtn.addEventListener('click', function (e) {
+      // Keyboard-activated clicks (Enter/Space) have detail === 0
+      if (e.detail === 0) spawnRipple(null, null);
+      increment();
+    });
+
+    // Global keyboard shortcuts: Space / Enter taps anywhere on the page
+    document.addEventListener('keydown', function (e) {
+      var t = e.target;
+      if (t instanceof Element && t.closest('button')) return; // let buttons handle themselves
+      if (e.code === 'Space' || e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        spawnRipple(null, null);
+        increment();
+      }
+    });
+
+    undoBtn.addEventListener('click', undo);
+    resetBtn.addEventListener('click', reset);
+
+    window.addEventListener('pagehide', writeState);
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) writeState();
+    });
+
+    /* ------------------------------------------------------------
+       Init
+       ------------------------------------------------------------ */
+    readState();
+    initTheme();
+    render({ animate: false });
+  })();
+  </script>
+</body>
+</html>
